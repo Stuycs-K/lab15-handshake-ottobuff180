@@ -10,8 +10,13 @@
   returns the file descriptor for the upstream pipe.
   =========================*/
 int server_setup() {
-  int from_client = 0;
-  return from_client;
+  printf("server 1\n");
+  mkfifo(WKP, 0644);
+  printf("server 2\n");
+  int p1 = open(WKP, O_RDONLY);
+  printf("server 4\n");
+  unlink(WKP);
+  return p1;
 }
 
 /*=========================
@@ -24,8 +29,20 @@ int server_setup() {
   returns the file descriptor for the upstream pipe (see server setup).
   =========================*/
 int server_handshake(int *to_client) {
-  int from_client;
-  return from_client;
+  int to_server = server_setup();
+  char pp[100];
+  read(to_server,pp,sizeof(pp));
+  printf("server 5: %s\n",pp);
+  printf("server 6\n");
+  *to_client = open(pp, O_WRONLY);
+  int synack = getpid();
+  printf("server 7: %d\n",synack);
+  write(*to_client,&synack,sizeof(synack));
+  int finalack;
+  printf("server 9\n");
+  read(to_server,&finalack,sizeof(finalack));
+  printf("server 9: %d\n",finalack);
+  return to_server;
 }
 
 
@@ -39,8 +56,22 @@ int server_handshake(int *to_client) {
   returns the file descriptor for the downstream pipe.
   =========================*/
 int client_handshake(int *to_server) {
-  int from_server;
-  return from_server;
+  char pp[100];
+  sprintf(pp,"%d",getpid());
+  printf("client 3: %s\n",pp);
+  mkfifo(pp, 0644);
+  *to_server = open(WKP, O_WRONLY);
+  write(*to_server,pp,sizeof(pp));
+  int downstream = open(pp, O_RDONLY);
+  printf("client 8\n");
+  unlink(pp);
+  int synack;
+  read(downstream,&synack,sizeof(synack));
+  printf("client 8: %d\n",synack);
+  synack++;
+  printf("client 8: %d\n",synack);
+  write(*to_server,&synack,sizeof(synack));
+  return downstream;
 }
 
 
