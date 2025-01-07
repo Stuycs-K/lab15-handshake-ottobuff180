@@ -14,8 +14,8 @@ int server_setup() {
   mkfifo(WKP, 0644);
   printf("server 2\n");
   int p1 = open(WKP, O_RDONLY);
-  printf("server 4\n");
   unlink(WKP);
+  printf("server 4\n");
   return p1;
 }
 
@@ -29,9 +29,9 @@ int server_setup() {
   returns the file descriptor for the upstream pipe (see server setup).
   =========================*/
 int server_handshake(int *to_client) {
-  int to_server = server_setup();
+  int from_client = server_setup();
   char pp[100];
-  read(to_server,pp,sizeof(pp));
+  read(from_client,pp,sizeof(pp));
   printf("server 5: %s\n",pp);
   printf("server 6\n");
   *to_client = open(pp, O_WRONLY);
@@ -40,11 +40,25 @@ int server_handshake(int *to_client) {
   write(*to_client,&synack,sizeof(synack));
   int finalack;
   printf("server 9\n");
-  read(to_server,&finalack,sizeof(finalack));
+  read(from_client,&finalack,sizeof(finalack));
   printf("server 9: %d\n",finalack);
-  return to_server;
+  return from_client;
 }
 
+void server_handshake_half(int *to_client, int from_client) {
+  char pp[100];
+  read(from_client,pp,sizeof(pp));
+  printf("server 5: %s\n",pp);
+  printf("server 6\n");
+  *to_client = open(pp, O_WRONLY);
+  int synack = getpid();
+  printf("server 7: %d\n",synack);
+  write(*to_client,&synack,sizeof(synack));
+  int finalack;
+  printf("server 9\n");
+  read(from_client,&finalack,sizeof(finalack));
+  printf("server 9: %d\n",finalack);
+}
 
 /*=========================
   client_handshake

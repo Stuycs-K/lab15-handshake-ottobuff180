@@ -5,9 +5,12 @@ int main() {
   int to_client;
   to_client = client_handshake( &to_server );
   
-  char byte[1];
-  byte[0] = 'a';
-  write(to_server,byte,sizeof(byte));
-  close(to_server);
-  close(to_client);
+  while(1){
+    int ran;
+    int i = read(to_client,&ran,sizeof(ran));
+    if(i <= 0){
+      exit(1);
+    }
+    printf("%d\n", ran);
+  }
 }
